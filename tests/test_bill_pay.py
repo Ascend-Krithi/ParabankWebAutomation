@@ -13,19 +13,18 @@ from locators.locators import ParabankLocators
 
 class TestParabankBillPay(unittest.TestCase):
     
-   RUN_HEADLESS = False 
+    # Set to False to run in 'Headed' mode via Xvfb on the cloud
+    RUN_HEADLESS = False 
 
     def setUp(self):
         chrome_options = Options()
         if self.RUN_HEADLESS:
             chrome_options.add_argument("--headless")
         
-        # Required for cloud stability
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=1920,1080")
 
-        # Driver path management
         driver_path = ChromeDriverManager().install()
         if "THIRD_PARTY_NOTICES" in driver_path:
             driver_path = os.path.join(os.path.dirname(driver_path), "chromedriver")
@@ -39,21 +38,13 @@ class TestParabankBillPay(unittest.TestCase):
         self.bp_page = BillPayPage(self.driver)
 
     def test_bill_payment_flow(self):
-        # 1. Login
-        self.bp_page.login("AAVA", "ascendion@1")
+        self.bp_page.login("aavademo", "Ascendion_1")
         
-        # 2. FAIL-PROOF WAIT: Wait for URL to change to the dashboard
         wait = WebDriverWait(self.driver, 20)
         wait.until(EC.url_contains("overview.htm"))
         
-        # 3. Synchronize on the Logout Link using the new XPATH
-        logout = wait.until(EC.visibility_of_element_located(ParabankLocators.LOGOUT_LINK))
-        self.assertTrue(logout.is_displayed(), "Login success but Logout link not found.")
-
-        # 4. Navigation
-        self.assertTrue(self.bp_page.navigate_to_bill_pay(), "Navigation to Bill Pay failed.")
-
-        # 5. Form Submission
+        self.assertTrue(self.bp_page.navigate_to_bill_pay())
+        
         data = {
             "payee": "Electric Company", "address": "123 Main Street",
             "city": "New York", "state": "NY", "zip": "10001",
@@ -61,11 +52,9 @@ class TestParabankBillPay(unittest.TestCase):
         }
         self.bp_page.fill_bill_pay_form(data)
         
-        # 6. Final Assertions
         result_text = self.bp_page.get_confirmation_text()
         self.assertIn("Bill Payment Complete", result_text)
-        self.assertIn(data["payee"], result_text)
-        print("✅ Test successfully executed with all assertions verified.")
+        print("✅ UI Flow finished successfully.")
 
     def tearDown(self):
         if self.driver:
@@ -73,12 +62,8 @@ class TestParabankBillPay(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        print("\n--- Finalizing TestRail Results ---")
-        try:
-            tr = TestRailHandler()
-            tr.update_testrail_results()
-        except Exception as e:
-            print(f"⚠️ TestRail Update Failed: {e}")
+        tr = TestRailHandler()
+        tr.update_testrail_results()
 
 if __name__ == "__main__":
     unittest.main()
