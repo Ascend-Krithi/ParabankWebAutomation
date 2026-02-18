@@ -10,11 +10,16 @@ class BillPayPage:
         self.wait = WebDriverWait(driver, 20) # Increased timeout for cloud stability
 
     def login(self, username, password):
-        self.wait.until(EC.visibility_of_element_located(ParabankLocators.USERNAME_FIELD)).send_keys(username)
-        self.driver.find_element(*ParabankLocators.PASSWORD_FIELD).send_keys(password)
-        # Ensure button is clickable before clicking
-        login_btn = self.wait.until(EC.element_to_be_clickable(ParabankLocators.LOGIN_BUTTON))
-        login_btn.click()
+        user_field = self.wait.until(EC.visibility_of_element_located(ParabankLocators.USERNAME_FIELD))
+        user_field.clear()
+        user_field.send_keys(username)
+        
+        pass_field = self.driver.find_element(*ParabankLocators.PASSWORD_FIELD)
+        pass_field.clear()
+        pass_field.send_keys(password)
+        
+        login_btn = self.driver.find_element(*ParabankLocators.LOGIN_BUTTON)
+        self.driver.execute_script("arguments[0].click();", login_btn)
 
     def navigate_to_bill_pay(self):
         for _ in range(3):
@@ -47,13 +52,8 @@ class BillPayPage:
         self.driver.find_element(*ParabankLocators.SEND_PAYMENT_BTN).click()
 
     def get_confirmation_text(self):
-        # Increased timeout to 30s because the Bill Pay processing in Parabank can be slow
-        print("⏳ Waiting for confirmation message...")
-        try:
-            element = WebDriverWait(self.driver, 30).until(
-                EC.visibility_of_element_located(ParabankLocators.CONFIRMATION_MSG)
-            )
-            return element.text
-        except Exception as e:
-            self.driver.save_screenshot("screenshots/confirmation_error.png")
-            raise e
+        # Patient wait for the final result
+        element = WebDriverWait(self.driver, 30).until(
+            EC.visibility_of_element_located(ParabankLocators.CONFIRMATION_MSG)
+        )
+        return element.text
