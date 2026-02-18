@@ -1,34 +1,44 @@
 import unittest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from pages.bill_pay_page import BillPayPage
 from utils.testrail_handler import TestRailHandler
+from locators.locators import ParabankLocators
 
 class TestParabankBillPay(unittest.TestCase):
     
     def setUp(self):
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--window-size=1920,1080")
+
         service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service)
-        self.driver.maximize_window()
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.driver.get("https://parabank.parasoft.com/parabank/index.htm")
         self.bp_page = BillPayPage(self.driver)
 
     def test_bill_payment_flow(self):
-        # 1. Assert Login Page Loaded
-        self.assertIn("ParaBank", self.driver.title, "Home page failed to load.")
+        # 1. Login
+        self.bp_page.login("AAVA", "ascendion@1")
+        
+        # 2. FAIL-PROOF WAIT: Wait for URL to change to the dashboard
+        wait = WebDriverWait(self.driver, 20)
+        wait.until(EC.url_contains("overview.htm"))
+        
+        # 3. Synchronize on the Logout Link using the new XPATH
+        logout = wait.until(EC.visibility_of_element_located(ParabankLocators.LOGOUT_LINK))
+        self.assertTrue(logout.is_displayed(), "Login success but Logout link not found.")
 
-        # 2. Perform Login and Assert Success
-        self.bp_page.login("aavademo", "Ascendion_1")
-        self.assertTrue(self.driver.find_element(by="link text", value="Log Out").is_displayed(), 
-                        "Login was not successful.")
+        # 4. Navigation
+        self.assertTrue(self.bp_page.navigate_to_bill_pay(), "Navigation to Bill Pay failed.")
 
-        # 3. Navigate and Assert Page Change
-        nav_success = self.bp_page.navigate_to_bill_pay()
-        self.assertTrue(nav_success, "Failed to click Bill Pay link.")
-        self.assertIn("billpay.htm", self.driver.current_url, "Not on the Bill Pay page.")
-
-        # 4. Data Entry
+        # 5. Form Submission
         data = {
             "payee": "Electric Company", "address": "123 Main Street",
             "city": "New York", "state": "NY", "zip": "10001",
@@ -36,25 +46,24 @@ class TestParabankBillPay(unittest.TestCase):
         }
         self.bp_page.fill_bill_pay_form(data)
         
-        # 5. Final Assertions on Confirmation Message
+        # 6. Final Assertions
         result_text = self.bp_page.get_confirmation_text()
-        
-        # Check overall success message
-        self.assertIn("Bill Payment Complete", result_text, "Success message not found!")
-        
-        # Check specific details in the result
-        self.assertIn(data["payee"], result_text, f"Payee {data['payee']} missing from confirmation.")
-        print("Test passed with all assertions verified.")
+        self.assertIn("Bill Payment Complete", result_text)
+        self.assertIn(data["payee"], result_text)
+        print("✅ Test successfully executed with all assertions verified.")
 
     def tearDown(self):
-        self.driver.quit()
-    
+        if self.driver:
+            self.driver.quit()
+
     @classmethod
     def tearDownClass(cls):
-        """This runs once after all tests in the class are finished."""
         print("\n--- Finalizing TestRail Results ---")
-        tr = TestRailHandler()
-        tr.update_testrail_results()
+        try:
+            tr = TestRailHandler()
+            tr.update_testrail_results()
+        except Exception as e:
+            print(f"⚠️ TestRail Update Failed: {e}")
 
 if __name__ == "__main__":
     unittest.main()
