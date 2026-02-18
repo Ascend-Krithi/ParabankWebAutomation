@@ -38,7 +38,7 @@ class TestParabankBillPay(unittest.TestCase):
         self.bp_page = BillPayPage(self.driver)
 
     def test_bill_payment_flow(self):
-        self.bp_page.login("aavademo", "Ascendion_1")
+        self.bp_page.login("AAVA", "ascendion@1")
         
         wait = WebDriverWait(self.driver, 20)
         wait.until(EC.url_contains("overview.htm"))
