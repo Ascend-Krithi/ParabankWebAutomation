@@ -1,10 +1,12 @@
-name: Parabank UI Automation
+name: Parabank UI Automation Execution
 
 on:
-  workflow_dispatch: # Allows your agent/tool to trigger this manually
+  workflow_dispatch: # Allows manual trigger from GitHub UI or via API/Tool Code
+  push:
+    branches: [ main ] # Runs automatically when you push to main
 
 jobs:
-  test:
+  run-selenium-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,8 +21,20 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Parabank Tests
-        # 'unittest discover' finds tests automatically without hardcoded paths
+      - name: Execute Selenium Tests
+        # This command finds all tests in the 'tests' folder
         run: python -m unittest discover -s tests -p 'test_*.py'
+        env:
+          # You can add environment variables here if needed
+          PYTHONPATH: . 
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-reports
+          path: |
+            *.log
+            screenshots/
