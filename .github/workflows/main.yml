@@ -32,15 +32,17 @@ jobs:
           pip install -r requirements.txt
 
       - name: Execute and Record Selenium Tests
-        # We start Xvfb, then start ffmpeg to record the display, then run the test
         run: |
           Xvfb :99 -screen 0 1920x1080x24 &
           sleep 3
-          ffmpeg -f x11grab -video_size 1920x1080 -i :99 -codec:v libx264 -pix_fmt yuv420p -r 25 -y video_report.mp4 &
+          # Optimized ffmpeg for Windows compatibility and fast finalization
+          ffmpeg -f x11grab -video_size 1920x1080 -i :99 -codec:v libx264 -preset ultrafast -movflags +faststart -pix_fmt yuv420p -r 24 -y video_report.mp4 &
           export DISPLAY=:99
           python -m unittest discover -s tests -p 'test_*.py'
-          pkill ffmpeg || true
-          sleep 2 # Ensure ffmpeg finishes writing the file
+          
+          # IMPORTANT: Graceful shutdown of ffmpeg to prevent file corruption
+          pkill -INT ffmpeg
+          sleep 5
         env:
           PYTHONPATH: . 
 
