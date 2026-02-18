@@ -54,7 +54,7 @@ class TestParabankBillPay(unittest.TestCase):
     def test_bill_payment_flow(self):
         """The core automation flow for Parabank Bill Pay."""
         print("🚀 Starting Login process...")
-        self.bp_page.login("aavademo", "Ascendion_1")
+        self.bp_page.login("AAVA", "ascendion@1")
         
         # Synchronization: Wait for dashboard URL
         wait = WebDriverWait(self.driver, 25)
