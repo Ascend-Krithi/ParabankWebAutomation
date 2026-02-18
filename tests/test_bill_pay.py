@@ -46,7 +46,7 @@ class TestParabankBillPay(unittest.TestCase):
             'ffmpeg', '-f', 'x11grab', '-video_size', '1920x1080', '-i', ':99',
             '-codec:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
             '-r', '24', '-y', 'video_report.mp4'
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.ST_ERROR)
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         self.bp_page = BillPayPage(self.driver)
 
