@@ -9,14 +9,22 @@ class BillPayPage:
         self.driver = driver
         self.wait = WebDriverWait(driver, 20) # Increased timeout for cloud stability
 
+    def type_slowly(self, element, text, delay=0.1):
+        """Types each character with a small delay for video clarity."""
+        element.clear()
+        for char in text:
+            element.send_keys(char)
+            time.sleep(delay)
+        time.sleep(0.3)
+
     def login(self, username, password):
         user_field = self.wait.until(EC.visibility_of_element_located(ParabankLocators.USERNAME_FIELD))
         user_field.clear()
-        user_field.send_keys(username)
+        self.type_slowly(user_field, username)
         
         pass_field = self.driver.find_element(*ParabankLocators.PASSWORD_FIELD)
         pass_field.clear()
-        pass_field.send_keys(password)
+        self.type_slowly(pass_field, password)
         
         login_btn = self.driver.find_element(*ParabankLocators.LOGIN_BUTTON)
         self.driver.execute_script("arguments[0].click();", login_btn)
@@ -46,8 +54,8 @@ class BillPayPage:
         for locator, value in fields:
             element = self.wait.until(EC.visibility_of_element_located(locator))
             element.clear()
-            element.send_keys(value)
-            time.sleep(0.3) 
+            self.type_slowly(element, value)
+            time.sleep(1.5) 
         
         send_btn = self.driver.find_element(*ParabankLocators.SEND_PAYMENT_BTN)
         send_btn.click()
