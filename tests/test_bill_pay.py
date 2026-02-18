@@ -1,6 +1,7 @@
 import os
 import stat
 import time
+import subprocess # Added for video control
 import unittest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -17,6 +18,7 @@ from locators.locators import ParabankLocators
 class TestParabankBillPay(unittest.TestCase):
     
     RUN_HEADLESS = False 
+    video_process = None # To track the recorder
 
     def setUp(self):
         chrome_options = Options()
@@ -35,14 +37,23 @@ class TestParabankBillPay(unittest.TestCase):
         service = Service(executable_path=driver_path)
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         
-        time.sleep(2) 
+        # 1. Load the page first
         self.driver.get("https://parabank.parasoft.com/parabank/index.htm")
+        
+        # 2. Start Recording AFTER page load to avoid black screen
+        print("🎥 Starting video recording...")
+        self.video_process = subprocess.Popen([
+            'ffmpeg', '-f', 'x11grab', '-video_size', '1920x1080', '-i', ':99',
+            '-codec:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+            '-r', '24', '-y', 'video_report.mp4'
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.ST_ERROR)
+        
         self.bp_page = BillPayPage(self.driver)
 
     def test_bill_payment_flow(self):
         self.bp_page.login("AAVA", "ascendion@1")
         
-        # 40s timeout for cloud redirect stability
+        # 40s timeout for cloud stability
         wait = WebDriverWait(self.driver, 40) 
         try:
             wait.until(EC.url_contains("overview.htm"))
@@ -64,11 +75,18 @@ class TestParabankBillPay(unittest.TestCase):
         result_text = self.bp_page.get_confirmation_text()
         self.assertIn("Bill Payment Complete", result_text)
         
-        time.sleep(5) # Buffer for video capture
+        time.sleep(5) # Final buffer to show success on video
 
     def tearDown(self):
+        # 1. Close browser
         if self.driver:
             self.driver.quit()
+        
+        # 2. Stop video recording gracefully
+        if self.video_process:
+            print("💾 Finalizing video file...")
+            self.video_process.terminate()
+            time.sleep(2) # Allow ffmpeg to finalize the headers
 
     @classmethod
     def tearDownClass(cls):
