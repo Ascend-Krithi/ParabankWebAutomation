@@ -62,6 +62,7 @@ class TestParabankBillPay(unittest.TestCase):
             self.driver.save_screenshot("screenshots/login_timeout_debug.png")
             self.fail(f"Login timed out. Current URL: {self.driver.current_url}")
 
+        time.sleep(2)
         self.assertTrue(self.bp_page.navigate_to_bill_pay())
         
         data = {
@@ -71,7 +72,7 @@ class TestParabankBillPay(unittest.TestCase):
         }
         self.bp_page.fill_bill_pay_form(data)
         
-        time.sleep(2) 
+        time.sleep(3) 
         result_text = self.bp_page.get_confirmation_text()
         self.assertIn("Bill Payment Complete", result_text)
         
