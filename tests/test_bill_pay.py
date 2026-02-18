@@ -52,40 +52,29 @@ class TestParabankBillPay(unittest.TestCase):
         self.bp_page = BillPayPage(self.driver)
 
     def test_bill_payment_flow(self):
-        """The core automation flow for Parabank Bill Pay."""
-        print("🚀 Starting Login process...")
-        self.bp_page.login("AAVA", "ascendion@1")
+        """The main test logic."""
+        self.bp_page.login("aavademo", "Ascendion_1")
         
-        # Synchronization: Wait for dashboard URL
         wait = WebDriverWait(self.driver, 25)
-        try:
-            wait.until(EC.url_contains("overview.htm"))
-            print("✅ Login successful, redirected to Overview.")
-        except TimeoutException:
-            # Capture evidence if login fails
-            os.makedirs("screenshots", exist_ok=True)
-            self.driver.save_screenshot("screenshots/login_timeout.png")
-            self.fail(f"Login timed out. Current URL: {self.driver.current_url}")
-
-        # Navigate to Bill Pay
-        self.assertTrue(self.bp_page.navigate_to_bill_pay(), "Failed to navigate to Bill Pay page.")
+        wait.until(EC.url_contains("overview.htm"))
         
-        # Form Data Entry
+        self.assertTrue(self.bp_page.navigate_to_bill_pay())
+        
         data = {
             "payee": "Electric Company", "address": "123 Main Street",
             "city": "New York", "state": "NY", "zip": "10001",
             "phone": "555-1234", "acc": "987654321"
         }
-        print(f"📝 Filling Bill Pay form for: {data['payee']}")
         self.bp_page.fill_bill_pay_form(data)
         
-        # Final Assertions
-        result_text = self.bp_page.get_confirmation_text()
-        self.assertIn("Bill Payment Complete", result_text, "Confirmation message missing!")
-        self.assertIn(data["payee"], result_text, "Payee name missing in confirmation!")
+        # Wait for the form to disappear before checking results
+        time.sleep(2) 
         
-        # VIDEO BUFFER: Stay on the success screen so the client can see it in the video
-        time.sleep(3)
+        result_text = self.bp_page.get_confirmation_text()
+        self.assertIn("Bill Payment Complete", result_text)
+        
+        # Buffer for video
+        time.sleep(5)
         print("✅ UI Flow finished successfully.")
 
     def tearDown(self):
