@@ -18,28 +18,29 @@ jobs:
         with:
           python-version: '3.12'
 
-      # FIX: Install Xvfb to support Headed Mode on a Headless Server
-      - name: Install Xvfb and Dependencies
+      - name: Create Artifact Directory
+        run: mkdir -p screenshots
+
+      - name: Install System Dependencies for Headed Mode
+        # Removed libgconf-2-4 as it is deprecated in Ubuntu 24.04
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb libxi6 libgconf-2-4
+          sudo apt-get install -y xvfb libxi6 libnss3 libxss1 libasound2t64 libgbm1
 
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Execute Selenium Tests in Virtual Headed Mode
-        # 'xvfb-run' starts the virtual monitor before running the test
+      - name: Execute Selenium Tests in Virtual Display
+        # xvfb-run provides the 'Display' that allows Headed mode to function
         run: xvfb-run --auto-servernum python -m unittest discover -s tests -p 'test_*.py'
         env:
-          PYTHONPATH: .
+          PYTHONPATH: . 
 
-      - name: Upload Test Results
+      - name: Upload Logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: selenium-execution-data
-          path: |
-            screenshots/
-            *.log
+          name: execution-artifacts
+          path: screenshots/
