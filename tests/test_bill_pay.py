@@ -13,24 +13,26 @@ from locators.locators import ParabankLocators
 
 class TestParabankBillPay(unittest.TestCase):
     
-    RUN_HEADLESS = False 
+   RUN_HEADLESS = False 
 
     def setUp(self):
         chrome_options = Options()
-        
-        # If we want Headed mode, we DO NOT add the --headless argument
         if self.RUN_HEADLESS:
             chrome_options.add_argument("--headless")
         
+        # Required for cloud stability
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=1920,1080")
 
+        # Driver path management
         driver_path = ChromeDriverManager().install()
         if "THIRD_PARTY_NOTICES" in driver_path:
             driver_path = os.path.join(os.path.dirname(driver_path), "chromedriver")
 
+        # Set execute permissions for Linux runner
         os.chmod(driver_path, stat.S_IRWXU)
+
         service = Service(executable_path=driver_path)
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.driver.get("https://parabank.parasoft.com/parabank/index.htm")
