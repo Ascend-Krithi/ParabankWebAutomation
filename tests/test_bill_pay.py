@@ -18,7 +18,13 @@ class TestParabankBillPay(unittest.TestCase):
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=1920,1080")
 
-        service = Service(ChromeDriverManager().install())
+        # FIX: Get the path and ensure it points to the executable, not the notice file
+        driver_path = ChromeDriverManager().install()
+        if "THIRD_PARTY_NOTICES" in driver_path:
+            # Move up one level to the folder and point to the actual binary
+            driver_path = os.path.join(os.path.dirname(driver_path), "chromedriver")
+
+        service = Service(executable_path=driver_path)
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.driver.get("https://parabank.parasoft.com/parabank/index.htm")
         self.bp_page = BillPayPage(self.driver)
