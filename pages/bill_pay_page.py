@@ -49,7 +49,8 @@ class BillPayPage:
             element.send_keys(value)
             time.sleep(0.3) 
         
-        self.driver.find_element(*ParabankLocators.SEND_PAYMENT_BTN).click()
+        send_btn = self.driver.find_element(*ParabankLocators.SEND_PAYMENT_BTN)
+        send_btn.click()
 
     def get_confirmation_text(self):
         # Patient wait for the final result
