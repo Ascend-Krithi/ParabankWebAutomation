@@ -13,24 +13,24 @@ from locators.locators import ParabankLocators
 
 class TestParabankBillPay(unittest.TestCase):
     
+    RUN_HEADLESS = False 
+
     def setUp(self):
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        
+        # If we want Headed mode, we DO NOT add the --headless argument
+        if self.RUN_HEADLESS:
+            chrome_options.add_argument("--headless")
+        
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=1920,1080")
 
-        # 1. Install and get path
         driver_path = ChromeDriverManager().install()
-        
-        # 2. Fix the "THIRD_PARTY_NOTICES" path issue we saw earlier
         if "THIRD_PARTY_NOTICES" in driver_path:
             driver_path = os.path.join(os.path.dirname(driver_path), "chromedriver")
 
-        # 3. FIX PERMISSION ERROR: Manually set the file to be executable
-        # This grants Read, Write, and Execute permissions to the owner
-        os.chmod(driver_path, stat.S_IRWXU) 
-
+        os.chmod(driver_path, stat.S_IRWXU)
         service = Service(executable_path=driver_path)
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
         self.driver.get("https://parabank.parasoft.com/parabank/index.htm")
