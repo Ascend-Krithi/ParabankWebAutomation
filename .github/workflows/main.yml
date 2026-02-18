@@ -1,4 +1,4 @@
-name: Parabank UI Automation Execution (Client Demo)
+name: Parabank UI Automation (Optimized Video)
 
 on:
   workflow_dispatch:
@@ -21,7 +21,8 @@ jobs:
       - name: Create Artifact Directory
         run: mkdir -p screenshots
 
-      - name: Install System Dependencies and Recorder
+      - name: Install System Dependencies
+        # Only install the recorder; don't start it here
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb ffmpeg libxi6 libnss3 libxss1 libasound2t64 libgbm1
@@ -31,23 +32,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Execute and Record Selenium Tests
+      - name: Execute Selenium Tests
         run: |
           # Start Virtual Display
           Xvfb :99 -screen 0 1920x1080x24 &
-          sleep 3
-          
-          # Start Recording with Windows-compatible flags
-          ffmpeg -f x11grab -video_size 1920x1080 -i :99 -codec:v libx264 -pix_fmt yuv420p -movflags +faststart -r 24 -y video_report.mp4 &
           export DISPLAY=:99
-          
-          # Run tests and capture exit code to ensure ffmpeg closes even on failure
-          python -m unittest discover -s tests -p 'test_*.py' || export EXIT_STATUS=$?
-          
-          # Graceful shutdown of ffmpeg to prevent video corruption
-          pkill -SIGINT ffmpeg
-          sleep 5
-          exit ${EXIT_STATUS:-0}
+          # Python will now manage the ffmpeg process
+          python -m unittest discover -s tests -p 'test_*.py'
         env:
           PYTHONPATH: . 
 
