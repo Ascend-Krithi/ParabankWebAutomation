@@ -47,4 +47,13 @@ class BillPayPage:
         self.driver.find_element(*ParabankLocators.SEND_PAYMENT_BTN).click()
 
     def get_confirmation_text(self):
-        return self.wait.until(EC.visibility_of_element_located(ParabankLocators.CONFIRMATION_MSG)).text
+        # Increased timeout to 30s because the Bill Pay processing in Parabank can be slow
+        print("⏳ Waiting for confirmation message...")
+        try:
+            element = WebDriverWait(self.driver, 30).until(
+                EC.visibility_of_element_located(ParabankLocators.CONFIRMATION_MSG)
+            )
+            return element.text
+        except Exception as e:
+            self.driver.save_screenshot("screenshots/confirmation_error.png")
+            raise e
