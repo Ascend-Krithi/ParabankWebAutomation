@@ -1,4 +1,5 @@
 import os
+import stat
 import unittest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -19,11 +20,16 @@ class TestParabankBillPay(unittest.TestCase):
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=1920,1080")
 
-        # FIX: Get the path and ensure it points to the executable, not the notice file
+        # 1. Install and get path
         driver_path = ChromeDriverManager().install()
+        
+        # 2. Fix the "THIRD_PARTY_NOTICES" path issue we saw earlier
         if "THIRD_PARTY_NOTICES" in driver_path:
-            # Move up one level to the folder and point to the actual binary
             driver_path = os.path.join(os.path.dirname(driver_path), "chromedriver")
+
+        # 3. FIX PERMISSION ERROR: Manually set the file to be executable
+        # This grants Read, Write, and Execute permissions to the owner
+        os.chmod(driver_path, stat.S_IRWXU) 
 
         service = Service(executable_path=driver_path)
         self.driver = webdriver.Chrome(service=service, options=chrome_options)
